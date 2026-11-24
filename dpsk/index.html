@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a0c0b'/%3E%3Ccircle cx='32' cy='32' r='17' fill='none' stroke='%23d9a441' stroke-width='2'/%3E%3Cpath d='M26 22l14 10-14 10z' fill='%23d9a441'/%3E%3C/svg%3E">
+<title>三幕音景 · Three Soundscapes</title>
+<meta name="description" content="用 Web Audio API 实时合成的三段原创音乐：田园、精灵、科幻。">
+<style>
+  :root{
+    --bg:#0a0c0b;
+    --bg-soft:#111412;
+    --ink:#f2eee3;
+    --muted:#9c9d91;
+    --muted-2:#71736a;
+    --line:rgba(242,238,227,.13);
+    --line-soft:rgba(242,238,227,.07);
+    --accent:#d9a441;
+    --accent-2:#6f8f5a;
+    --card:rgba(255,255,255,.035);
+    --serif:"Songti SC","STSong","Noto Serif SC","Source Han Serif SC",Georgia,"Times New Roman",serif;
+    --sans:"Avenir Next","Inter","Helvetica Neue","PingFang SC","Hiragino Sans GB",system-ui,sans-serif;
+    --mono:"SFMono-Regular","JetBrains Mono",Menlo,Consolas,monospace;
+    --ease:cubic-bezier(.22,1,.36,1);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(1200px 700px at 78% -12%, color-mix(in srgb, var(--accent-2) 16%, transparent), transparent 62%),
+      radial-gradient(900px 600px at 10% 8%, color-mix(in srgb, var(--accent) 8%, transparent), transparent 60%),
+      var(--bg);
+    color:var(--ink);
+    font-family:var(--sans);
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+    transition:background 1.2s var(--ease);
+    overflow-x:hidden;
+  }
+  body::after{
+    content:"";
+    position:fixed;
+    inset:0;
+    z-index:120;
+    pointer-events:none;
+    opacity:.035;
+    background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.92' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  ::selection{background:color-mix(in srgb,var(--accent) 40%,transparent);color:#fff}
+  button{font:inherit;color:inherit}
+  button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+  .page{width:min(1280px,100%);margin:0 auto;padding:0 30px}
+
+  /* ---------------------------------------------------------------- header */
+  .site-head{
+    display:flex;align-items:center;justify-content:space-between;
+    height:86px;border-bottom:1px solid var(--line-soft);
+  }
+  .brand{display:flex;align-items:center;gap:13px;text-decoration:none;color:var(--ink)}
+  .brand-mark{
+    width:29px;height:29px;border:1px solid var(--line);border-radius:50%;
+    display:grid;place-items:center;color:var(--accent);font-size:13px;
+    box-shadow:inset 0 0 18px color-mix(in srgb,var(--accent) 18%,transparent);
+  }
+  .brand b{font-family:var(--serif);font-weight:500;letter-spacing:.18em;font-size:15px}
+  .brand span{font-size:9px;letter-spacing:.26em;color:var(--muted-2);text-transform:uppercase;display:none}
+  .head-nav{display:flex;align-items:center;gap:8px}
+  .head-nav button{
+    background:none;border:1px solid transparent;border-radius:999px;
+    padding:9px 15px;font-size:11px;letter-spacing:.12em;color:var(--muted);
+    cursor:pointer;transition:.3s var(--ease);
+  }
+  .head-nav button:hover{color:var(--ink);border-color:var(--line);background:rgba(255,255,255,.02)}
+  .head-nav .all-btn{color:var(--ink);border-color:var(--line)}
+  .head-nav .all-btn.on{background:var(--accent);border-color:var(--accent);color:#15130d}
+
+  /* ------------------------------------------------------------------ hero */
+  .title-row{
+    display:grid;grid-template-columns:1.35fr .65fr;gap:40px;align-items:end;
+    padding:48px 0 32px;
+  }
+  .eyebrow{
+    margin:0 0 14px;font-size:10px;letter-spacing:.28em;text-transform:uppercase;
+    color:var(--accent);font-family:var(--mono);
+  }
+  h1{
+    margin:0;font-family:var(--serif);font-weight:500;
+    font-size:clamp(58px,8.8vw,116px);line-height:.88;letter-spacing:.06em;
+  }
+  h1 span{color:var(--accent);transition:color 1s var(--ease)}
+  .intro-note{max-width:330px;justify-self:end;padding-bottom:8px}
+  .intro-note p{margin:0 0 10px;font-size:13px;line-height:1.8;color:var(--muted)}
+  .intro-note p:first-child{color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:.06em}
+  .legend{display:flex;align-items:center;gap:8px;font-size:10px;letter-spacing:.16em;color:var(--muted-2);margin-top:18px}
+  .legend i{width:5px;height:5px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent)}
+
+  /* ----------------------------------------------------------------- stage */
+  .stage{
+    position:relative;isolation:isolate;height:clamp(460px,54vw,600px);
+    border:1px solid var(--line);border-radius:22px;overflow:hidden;
+    background:linear-gradient(140deg,#0c100d,#080a09 60%);
+    box-shadow:0 40px 100px rgba(0,0,0,.5), inset 0 1px rgba(255,255,255,.05);
+    animation:rise 1.1s var(--ease) both;
+  }
+  #viz{position:absolute;inset:0;width:100%;height:100%;display:block}
+  .stage::before{
+    content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+    background:
+      linear-gradient(180deg,rgba(6,8,7,.34) 0%,rgba(6,8,7,0) 32%,rgba(6,8,7,.12) 56%,rgba(6,8,7,.78) 100%),
+      linear-gradient(90deg,rgba(6,8,7,.6) 0%,rgba(6,8,7,.08) 55%,transparent 100%);
+  }
+  .stage-top{
+    position:absolute;z-index:3;left:30px;right:30px;top:24px;
+    display:flex;justify-content:space-between;align-items:center;
+    font-family:var(--mono);font-size:9px;letter-spacing:.22em;color:rgba(242,238,227,.55);
+  }
+  .stage-count{color:rgba(242,238,227,.82)}
+  .live-dot{display:flex;align-items:center;gap:8px}
+  .stage-tabs{
+    display:flex;gap:2px;padding:3px;border:1px solid rgba(255,255,255,.12);
+    border-radius:999px;background:rgba(8,11,9,.32);backdrop-filter:blur(12px);
+  }
+  .stage-tabs button{
+    border:0;background:none;border-radius:999px;padding:6px 11px;cursor:pointer;
+    color:rgba(242,238,227,.5);font-family:var(--mono);font-size:8px;letter-spacing:.1em;
+    display:flex;align-items:center;gap:5px;transition:.3s var(--ease);
+  }
+  .stage-tabs button b{font-family:var(--serif);font-size:10px;font-weight:400;color:rgba(242,238,227,.5)}
+  .stage-tabs button:hover{color:var(--ink)}
+  .stage-tabs button.on{background:rgba(255,255,255,.1);color:var(--ink)}
+  .stage-tabs button.on b{color:var(--accent)}
+  .live-dot i{width:5px;height:5px;border-radius:50%;background:var(--muted-2);transition:.4s}
+  .live-dot.on i{background:var(--accent);box-shadow:0 0 12px var(--accent);animation:blink 2.4s infinite}
+  .stage-copy{
+    position:absolute;z-index:3;left:42px;top:86px;max-width:500px;
+    pointer-events:none;
+  }
+  .stage-tag{
+    margin:0 0 14px;font-size:10px;letter-spacing:.26em;text-transform:uppercase;
+    color:var(--accent);font-family:var(--mono);
+  }
+  .stage-copy h2{
+    margin:0;font-family:var(--serif);font-weight:500;
+    font-size:clamp(40px,5.4vw,68px);line-height:1;letter-spacing:.08em;
+    text-shadow:0 3px 30px rgba(0,0,0,.45);
+  }
+  .stage-en{
+    margin:7px 0 0;font-family:var(--serif);font-style:italic;
+    font-size:15px;letter-spacing:.07em;color:rgba(242,238,227,.62);
+  }
+  .stage-desc{
+    margin:21px 0 0;max-width:410px;font-size:12.5px;line-height:1.9;
+    color:rgba(242,238,227,.62);text-shadow:0 1px 12px rgba(0,0,0,.5);
+  }
+  .stage-chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:18px}
+  .stage-chips span{
+    font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:rgba(242,238,227,.68);
+    border:1px solid rgba(255,255,255,.13);border-radius:999px;padding:6px 10px;
+    background:rgba(0,0,0,.15);backdrop-filter:blur(6px);
+  }
+
+  /* ------------------------------------------------------------- transport */
+  .transport{
+    position:absolute;z-index:4;left:22px;right:22px;bottom:20px;
+    display:flex;align-items:center;gap:16px;
+    padding:11px 14px 11px 11px;border-radius:999px;
+    border:1px solid rgba(255,255,255,.14);
+    background:rgba(10,13,11,.55);
+    backdrop-filter:blur(22px) saturate(1.2);
+    box-shadow:0 12px 40px rgba(0,0,0,.3);
+  }
+  .play-round{
+    flex:0 0 auto;width:52px;height:52px;border-radius:50%;border:0;
+    background:var(--accent);color:#14140e;cursor:pointer;
+    display:grid;place-items:center;transition:.3s var(--ease);
+    box-shadow:0 0 0 1px rgba(255,255,255,.12),0 6px 24px color-mix(in srgb,var(--accent) 28%,transparent);
+  }
+  .play-round:hover{transform:scale(1.055);filter:brightness(1.06)}
+  .play-round:active{transform:scale(.97)}
+  .play-round svg{width:17px;height:17px;display:block}
+  .time{font-family:var(--mono);font-size:10px;letter-spacing:.05em;color:rgba(242,238,227,.85);white-space:nowrap;min-width:84px}
+  .time span{color:var(--muted-2)}
+  .progress{
+    position:relative;flex:1;height:28px;display:flex;align-items:center;cursor:default;
+    min-width:80px;
+  }
+  .progress .rail{position:absolute;left:0;right:0;top:50%;height:2px;transform:translateY(-50%);background:rgba(255,255,255,.12);border-radius:2px;overflow:hidden}
+  .progress .fill{position:absolute;left:0;top:0;bottom:0;width:0%;background:linear-gradient(90deg,var(--accent-2),var(--accent));border-radius:2px;transition:width .08s linear}
+  .progress .dot{position:absolute;top:50%;left:0%;width:7px;height:7px;border-radius:50%;background:var(--accent);transform:translate(-50%,-50%);box-shadow:0 0 10px var(--accent);opacity:.9}
+  .progress .marks{position:absolute;inset:0;display:flex;align-items:center;gap:2px;pointer-events:none;opacity:.35}
+  .volume{display:flex;align-items:center;gap:9px;min-width:120px}
+  .volume label{font-family:var(--mono);font-size:8px;letter-spacing:.18em;color:var(--muted-2);text-transform:uppercase}
+  .volume input{
+    -webkit-appearance:none;appearance:none;width:70px;height:2px;border-radius:2px;
+    background:linear-gradient(90deg,var(--accent) var(--vol,80%),rgba(255,255,255,.16) var(--vol,80%));
+    cursor:pointer;outline-offset:8px;
+  }
+  .volume input::-webkit-slider-thumb{-webkit-appearance:none;width:10px;height:10px;border-radius:50%;background:var(--ink);box-shadow:0 0 0 4px rgba(0,0,0,.2)}
+  .volume input::-moz-range-thumb{width:10px;height:10px;border:0;border-radius:50%;background:var(--ink)}
+  .export-btn{
+    flex:0 0 auto;border:1px solid rgba(255,255,255,.16);background:transparent;border-radius:999px;
+    padding:10px 14px;font-family:var(--mono);font-size:9px;letter-spacing:.12em;
+    color:rgba(242,238,227,.76);cursor:pointer;transition:.3s var(--ease);white-space:nowrap;
+  }
+  .export-btn:hover{background:rgba(255,255,255,.08);color:var(--ink);border-color:rgba(255,255,255,.3)}
+
+  /* ---------------------------------------------------------------- tracks */
+  .section-head{
+    display:flex;justify-content:space-between;align-items:baseline;
+    margin:36px 0 14px;padding:0 2px;
+    font-family:var(--mono);font-size:9px;letter-spacing:.24em;color:var(--muted-2);text-transform:uppercase;
+  }
+  .tracks{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .track{
+    position:relative;overflow:hidden;cursor:pointer;
+    display:flex;flex-direction:column;
+    min-height:250px;padding:23px 23px 19px;
+    border:1px solid var(--line-soft);border-radius:18px;
+    background:linear-gradient(160deg,rgba(255,255,255,.045),rgba(255,255,255,.012));
+    transition:border-color .5s var(--ease),transform .5s var(--ease),background .5s var(--ease),box-shadow .5s var(--ease);
+    animation:rise .9s var(--ease) both;
+  }
+  .track:nth-child(2){animation-delay:.07s}
+  .track:nth-child(3){animation-delay:.14s}
+  .track::before{
+    content:"";position:absolute;inset:0;pointer-events:none;opacity:0;
+    background:radial-gradient(120% 80% at 80% 0%,color-mix(in srgb,var(--c1) 18%,transparent),transparent 60%);
+    transition:opacity .6s var(--ease);
+  }
+  .track:hover{transform:translateY(-4px);border-color:color-mix(in srgb,var(--c1) 38%,var(--line));box-shadow:0 26px 60px rgba(0,0,0,.3)}
+  .track:hover::before,.track.active::before{opacity:1}
+  .track.active{border-color:color-mix(in srgb,var(--c1) 52%,transparent);background:linear-gradient(160deg,color-mix(in srgb,var(--c1) 9%,rgba(255,255,255,.02)),rgba(255,255,255,.012))}
+  .track > *{position:relative;z-index:1}
+  .track-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:26px}
+  .track-no{
+    font-family:var(--serif);font-size:13px;letter-spacing:.2em;color:var(--c1);
+  }
+  .track-dur{font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--muted-2)}
+  .track-tag{font-family:var(--mono);font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--c1);margin-bottom:9px}
+  .track h3{margin:0;font-family:var(--serif);font-weight:500;font-size:25px;letter-spacing:.08em;line-height:1.15}
+  .track h3 span{
+    display:block;margin-top:5px;font-family:var(--sans);font-style:normal;
+    font-size:9px;font-weight:400;letter-spacing:.19em;text-transform:uppercase;color:var(--muted-2);
+  }
+  .track p{
+    margin:13px 0 16px;font-size:11.5px;line-height:1.7;color:var(--muted);
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  }
+  .track-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:auto}
+  .track-chips span{
+    font-family:var(--mono);font-size:8px;letter-spacing:.06em;color:var(--muted);
+    border:1px solid var(--line-soft);border-radius:999px;padding:5px 8px;
+  }
+  .track-foot{display:flex;justify-content:space-between;align-items:center;margin-top:16px;padding-top:13px;border-top:1px solid var(--line-soft)}
+  .track-cta{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:8px;letter-spacing:.14em;color:var(--muted-2)}
+  .track.active .track-cta{color:var(--c1)}
+  .mini-eq{display:flex;align-items:flex-end;gap:2px;height:9px}
+  .mini-eq i{display:block;width:2px;height:100%;background:currentColor;opacity:.3;transform-origin:bottom}
+  .track.active .mini-eq i{opacity:1;animation:eq 1.1s ease-in-out infinite}
+  .track.active .mini-eq i:nth-child(2){animation-delay:.18s}
+  .track.active .mini-eq i:nth-child(3){animation-delay:.34s}
+  .track.active .mini-eq i:nth-child(4){animation-delay:.08s}
+  .track-go{
+    width:30px;height:30px;border-radius:50%;border:1px solid var(--line);
+    display:grid;place-items:center;color:var(--muted);transition:.35s var(--ease);
+  }
+  .track:hover .track-go,.track.active .track-go{background:var(--c1);border-color:var(--c1);color:#10130e}
+  .track-go svg{width:10px;height:10px}
+
+  /* ------------------------------------------------------------------ foot */
+  .site-foot{
+    display:flex;justify-content:space-between;align-items:center;gap:20px;
+    margin-top:44px;padding:26px 0 42px;border-top:1px solid var(--line-soft);
+    font-family:var(--mono);font-size:8px;letter-spacing:.17em;color:var(--muted-2);text-transform:uppercase;
+  }
+  .site-foot b{font-weight:400;color:var(--muted)}
+
+  /* ----------------------------------------------------------------- modal */
+  .modal{
+    position:fixed;inset:0;z-index:110;display:grid;place-items:center;padding:24px;
+    background:rgba(5,7,6,.72);backdrop-filter:blur(14px);
+  }
+  .modal[hidden]{display:none}
+  .modal-card{
+    position:relative;width:min(660px,100%);max-height:82vh;overflow:auto;
+    border:1px solid var(--line);border-radius:20px;padding:38px;
+    background:linear-gradient(155deg,#151915,#0d100e);
+    box-shadow:0 40px 120px rgba(0,0,0,.6);
+    animation:pop .45s var(--ease) both;
+  }
+  .modal-card h2{margin:0 0 14px;font-family:var(--serif);font-weight:500;font-size:30px;letter-spacing:.06em}
+  .modal-card p{margin:0 0 14px;font-size:12.5px;line-height:1.9;color:var(--muted)}
+  .modal-card .small{font-size:10px;color:var(--muted-2);line-height:1.8;margin-top:22px}
+  .modal-close{
+    position:absolute;right:18px;top:16px;width:34px;height:34px;border-radius:50%;
+    border:1px solid var(--line);background:none;color:var(--muted);font-size:18px;cursor:pointer;
+  }
+  .modal-close:hover{color:var(--ink);background:rgba(255,255,255,.05)}
+  .about-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:22px 0 0}
+  .about-grid div{border:1px solid var(--line-soft);border-radius:12px;padding:14px;background:rgba(255,255,255,.02)}
+  .about-grid b{display:block;font-family:var(--serif);font-size:18px;color:var(--accent);font-weight:400;margin-bottom:6px}
+  .about-grid span{display:block;font-size:10.5px;line-height:1.6;color:var(--muted)}
+
+  /* --------------------------------------------------------------- loading */
+  .loading{
+    position:fixed;inset:0;z-index:115;display:grid;place-items:center;align-content:center;gap:18px;
+    background:rgba(6,8,7,.8);backdrop-filter:blur(12px);text-align:center;
+  }
+  .loading[hidden]{display:none}
+  .loader{width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.14);border-top-color:var(--accent);animation:spin 1s linear infinite}
+  .loading p{margin:0;font-family:var(--serif);font-size:18px;letter-spacing:.1em}
+  .loading small{font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--muted-2);max-width:320px;line-height:1.7}
+
+  .toast{
+    position:fixed;left:50%;bottom:28px;z-index:118;transform:translate(-50%,20px);
+    padding:11px 18px;border-radius:999px;border:1px solid var(--line);
+    background:rgba(18,22,18,.92);backdrop-filter:blur(16px);
+    font-size:11px;letter-spacing:.08em;color:var(--ink);
+    opacity:0;pointer-events:none;transition:.4s var(--ease);
+  }
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+  @keyframes rise{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+  @keyframes pop{from{opacity:0;transform:scale(.97) translateY(10px)}to{opacity:1;transform:none}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+  @keyframes eq{0%,100%{transform:scaleY(.35)}50%{transform:scaleY(1)}}
+
+  @media (max-width:960px){
+    .title-row{grid-template-columns:1fr;gap:18px;padding:30px 0 22px}
+    .intro-note{justify-self:start;max-width:440px}
+    .tracks{grid-template-columns:1fr}
+    .track{min-height:0}
+    .stage{height:min(76vw,560px);min-height:470px}
+    .volume{display:none}
+  }
+  @media (max-width:640px){
+    .page{padding:0 18px}
+    .site-head{height:70px}
+    .brand span{display:none}
+    .head-nav button{padding:8px 11px;font-size:10px}
+    h1{font-size:clamp(52px,16vw,76px)}
+    .stage{height:480px;border-radius:17px}
+    .stage-top{left:20px;right:20px;top:18px}
+    .stage-tabs{display:flex;padding:2px}
+    .stage-tabs button{padding:5px 8px}
+    .stage-tabs button span{display:none}
+    .stage-tabs button b{font-size:10px}
+    .stage-copy{left:22px;top:64px;max-width:calc(100% - 44px)}
+    .stage-desc{font-size:11.5px;max-width:300px}
+    .stage-chips{gap:5px}
+    .transport{left:10px;right:10px;bottom:11px;gap:9px;padding:8px 9px 8px 8px}
+    .play-round{width:44px;height:44px}
+    .time{min-width:70px;font-size:9px}
+    .export-btn{padding:9px 10px;font-size:8px}
+    .export-btn .long{display:none}
+    .section-head{margin-top:28px}
+    .site-foot{flex-direction:column;align-items:flex-start;gap:8px;padding-bottom:28px}
+    .about-grid{grid-template-columns:1fr}
+    .modal-card{padding:28px 22px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="site-head">
+    <a class="brand" href="#" aria-label="三幕音景 首页">
+      <span class="brand-mark">◒</span>
+      <b>三幕音景</b>
+      <span>Three Soundscapes</span>
+    </a>
+    <nav class="head-nav" aria-label="页面操作">
+      <button type="button" class="all-btn" id="allBtn">连续播放</button>
+      <button type="button" id="aboutBtn">关于</button>
+    </nav>
+  </header>
+
+  <main>
+    <section class="title-row">
+      <div>
+        <p class="eyebrow">A Web Audio Triptych · 2026</p>
+        <h1>三幕<span>音景</span></h1>
+      </div>
+      <div class="intro-note">
+        <p>三段风景，三种时间。</p>
+        <p>没有采样，没有音源库。所有声音由浏览器里的振荡器、噪声与滤波器实时合成。</p>
+        <div class="legend"><i></i> 建议佩戴耳机</div>
+      </div>
+    </section>
+
+    <section class="stage" id="stage" aria-label="音乐播放器">
+      <canvas id="viz" aria-hidden="true"></canvas>
+
+      <div class="stage-top">
+        <span class="stage-count" id="stageCount">I / III</span>
+        <div class="stage-tabs" id="stageTabs" role="tablist" aria-label="选择乐章">
+          <button type="button" data-index="0" class="on" role="tab"><b>I</b><span>田园</span></button>
+          <button type="button" data-index="1" role="tab"><b>II</b><span>精灵</span></button>
+          <button type="button" data-index="2" role="tab"><b>III</b><span>科幻</span></button>
+        </div>
+        <span class="live-dot" id="liveDot"><i></i><span id="liveLabel">READY</span></span>
+      </div>
+
+      <div class="stage-copy">
+        <p class="stage-tag" id="stageTag">悠闲 · 乡村</p>
+        <h2 id="stageTitle">晨露与麦浪</h2>
+        <p class="stage-en" id="stageEn">Morning Fields</p>
+        <p class="stage-desc" id="stageDesc"></p>
+        <div class="stage-chips" id="stageChips"></div>
+      </div>
+
+      <div class="transport">
+        <button type="button" class="play-round" id="playBtn" aria-label="播放">
+          <svg id="playIcon" viewBox="0 0 20 20" aria-hidden="true"><path d="M6 3.5 16 10 6 16.5Z" fill="currentColor"/></svg>
+        </button>
+        <div class="time" id="timeLabel">00:00 <span>/ 00:48</span></div>
+        <div class="progress" role="progressbar" aria-label="播放进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <div class="rail"><div class="fill" id="progressFill"></div></div>
+          <div class="dot" id="progressDot"></div>
+        </div>
+        <div class="volume">
+          <label for="volume">Vol</label>
+          <input type="range" id="volume" min="0" max="100" value="80" aria-label="音量">
+        </div>
+        <button type="button" class="export-btn" id="exportBtn">导出 <span class="long">WAV</span></button>
+      </div>
+    </section>
+
+    <div class="section-head"><span>The Movements</span><span>点击卡片选听</span></div>
+    <section class="tracks" id="tracks" aria-label="三个乐章"></section>
+
+    <footer class="site-foot">
+      <span><b>Composed in code</b> · Web Audio API</span>
+      <span>I 田园 &nbsp;/&nbsp; II 精灵 &nbsp;/&nbsp; III 科幻</span>
+    </footer>
+  </main>
+</div>
+
+<div class="modal" id="aboutModal" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="aboutTitle">
+    <button type="button" class="modal-close" id="closeAbout" aria-label="关闭">×</button>
+    <p class="eyebrow">About this piece</p>
+    <h2 id="aboutTitle">没有采样，只有声音的积木</h2>
+    <p>这三段音乐全部由 Web Audio API 实时合成：加法合成的拨弦、FM 钟声、共振峰人声、滤波锯齿波、程序化卷积混响，以及一颗一颗搭起来的电子鼓。页面上没有加载任何音频文件。</p>
+    <p>每段音乐都有自己的速度、调性、配器与效果链。切换乐章时，整个声音空间也会跟着换色。</p>
+    <div class="about-grid">
+      <div><b>I</b><span>D 大调 · 6/8 · 112 BPM<br>木吉他、长笛、低音提琴、鸟鸣</span></div>
+      <div><b>II</b><span>E 小调 · 4/4 · 84 BPM<br>竖琴、钢片琴、合唱、风</span></div>
+      <div><b>III</b><span>A 小调 · 4/4 · 124 BPM<br>模拟合成器、FM 主音、电子鼓</span></div>
+    </div>
+    <p class="small">播放时实时生成；点击「导出 WAV」会用 OfflineAudioContext 离线渲染当前乐章，渲染时间取决于电脑性能。所有声音均在本地生成，不上传任何数据。</p>
+  </div>
+</div>
+
+<div class="loading" id="loading" hidden>
+  <div class="loader" aria-hidden="true"></div>
+  <p id="loadingText">正在合成…</p>
+  <small id="loadingSub">首次播放会预先计算拨弦音色，请稍等。</small>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="sr-only" id="announce" aria-live="polite"></div>
+
+<script src="js/audio.js"></script>
+<script src="js/score.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

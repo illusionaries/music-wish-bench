@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>三段声音风景</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="scores.js" defer></script>
+  <script src="synth.js" defer></script>
+  <script src="player.js" defer></script>
+</head>
+<body>
+  <main class="album">
+    <header class="album-heading">
+      <div class="album-title">
+        <span class="sound-mark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+        <h1>三段声音风景</h1>
+      </div>
+      <span class="album-method">Web Audio API 合成</span>
+    </header>
+
+    <section class="player" aria-labelledby="piece-title">
+      <header class="piece-heading">
+        <div>
+          <p id="piece-style" class="piece-style"></p>
+          <h2 id="piece-title"></h2>
+        </div>
+        <p id="piece-meta" class="piece-meta"></p>
+      </header>
+
+      <div class="score">
+        <div class="score-heading">
+          <span>音符轨道</span>
+          <span id="piece-instruments"></span>
+        </div>
+        <div class="piano-roll" aria-hidden="true">
+          <canvas id="score"></canvas>
+          <div id="playhead"></div>
+          <div class="bar-labels"><span>01</span><span>05</span><span>09</span><span>13</span></div>
+        </div>
+      </div>
+
+      <div class="transport">
+        <div class="timeline">
+          <span id="elapsed" class="time">0:00</span>
+          <input id="seek" class="range seek" type="range" min="0" value="0" step="0.01" aria-label="播放进度">
+          <span id="duration" class="time"></span>
+        </div>
+        <div class="controls">
+          <button id="repeat" class="side-button" type="button" aria-pressed="false" aria-label="单曲循环" title="单曲循环">
+            <span aria-hidden="true">↻</span><span>循环</span>
+          </button>
+          <div class="playback">
+            <button id="previous" class="skip-button" type="button" aria-label="上一首" title="上一首"><span class="skip-icon back" aria-hidden="true"></span></button>
+            <button id="play" type="button" aria-label="播放" title="播放"><span class="play-icon" aria-hidden="true"></span></button>
+            <button id="next" class="skip-button" type="button" aria-label="下一首" title="下一首"><span class="skip-icon" aria-hidden="true"></span></button>
+          </div>
+          <label class="volume">音量 <input id="volume" class="range" type="range" min="0" max="1" value="0.8" step="0.01"></label>
+        </div>
+        <p id="status" role="status" hidden></p>
+      </div>
+    </section>
+
+    <section class="track-section" aria-labelledby="tracks-title">
+      <h2 id="tracks-title">曲目</h2>
+      <div class="tracks" id="tracks"></div>
+    </section>
+  </main>
+</body>
+</html>

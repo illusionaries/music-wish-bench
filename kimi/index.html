@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f4f1e9" />
+    <meta name="description" content="用 Web Audio API 实时合成的三段原创音乐：乡村、精灵与科幻。" />
+    <title>声景三章 · Web Audio Tryptich</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <div class="grain" aria-hidden="true"></div>
+    <header class="site-header">
+      <a class="brand" href="#" aria-label="声景三章首页">
+        <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M3 17h4l3-9 5 17 5-21 4 13h5" /></svg>
+        <span>声景三章</span>
+      </a>
+      <div class="header-note"><span class="status-dot"></span> WEB AUDIO · 实时合成</div>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="eyebrow">A WEB AUDIO TRIPTYCH · VOL. 01</p>
+          <h1 id="hero-title">三段风景，<br /><em>一次听见。</em></h1>
+          <p class="intro">从微风经过的麦田，到月光笼罩的森林，再驶向霓虹闪烁的未来。三段原创小品，完全由浏览器中的振荡器与噪声谱写。</p>
+          <div class="hero-footnote">
+            <span>03 首原创作品</span><span>00 个音频采样</span><span>建议佩戴耳机</span>
+          </div>
+        </div>
+
+        <section class="player" aria-label="音乐播放器">
+          <div class="player-topline">
+            <span>NOW PLAYING</span>
+            <span id="play-state">准备就绪</span>
+          </div>
+          <div class="now-playing">
+            <div>
+              <p id="current-kicker">01 / PASTORAL</p>
+              <h2 id="current-title">麦田慢行</h2>
+            </div>
+            <span id="current-key">C 大调 · 82 BPM</span>
+          </div>
+          <div class="visualizer-wrap">
+            <canvas id="visualizer" aria-label="实时音频频谱"></canvas>
+            <div class="visualizer-grid" aria-hidden="true"></div>
+            <span class="viz-label">FREQUENCY / AMPLITUDE</span>
+          </div>
+          <div class="timeline">
+            <span id="elapsed">0:00</span>
+            <input id="seek" type="range" min="0" max="1000" value="0" aria-label="播放进度" />
+            <span id="duration">0:23</span>
+          </div>
+          <div class="controls">
+            <div class="controls-left">
+              <button id="main-play" class="play-main" type="button" aria-label="播放">
+                <svg class="play-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 9 6-9 6Z" /></svg>
+              </button>
+              <button id="stop" class="icon-button" type="button" aria-label="停止">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="1" /></svg>
+              </button>
+              <button id="loop" class="icon-button" type="button" aria-label="循环播放" aria-pressed="false">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 2.8 20.2 6 17 8.8M3.5 11V9a3 3 0 0 1 3-3h13M7 21.2 3.8 18 7 15.2M20.5 13v2a3 3 0 0 1-3 3h-13" /></svg>
+              </button>
+            </div>
+            <div class="volume-control">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6.5 9H3v6h3.5l4.5 4ZM15 9a4 4 0 0 1 0 6M18 6a8 8 0 0 1 0 12" /></svg>
+              <input id="volume" type="range" min="0" max="100" value="72" aria-label="音量" />
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <section class="track-section" aria-labelledby="track-heading">
+        <div class="section-heading">
+          <h2 id="track-heading">选择一处风景</h2>
+          <p>点击卡片播放 · 按 1 / 2 / 3 快速切换</p>
+        </div>
+        <div class="track-grid">
+          <article class="track-card is-active" data-track="0" style="--accent: #b86a3c; --wash: #eee1cc">
+            <div class="track-art pastoral-art" aria-hidden="true">
+              <div class="sun"></div><div class="hill hill-back"></div><div class="hill hill-front"></div>
+              <span class="art-number">01</span><span class="art-caption">WIND THROUGH THE FIELD</span>
+            </div>
+            <div class="track-body">
+              <div class="track-meta"><span>PASTORAL</span><span>82 BPM · C MAJOR</span></div>
+              <h3>麦田慢行</h3>
+              <p>木吉他般的拨弦与轻轻摇摆的刷奏，让脚步跟着夕阳慢下来。</p>
+              <div class="mini-wave" aria-hidden="true"></div>
+              <div class="track-footer">
+                <button class="track-play" type="button" aria-label="播放麦田慢行">
+                  <span class="track-play-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 9 6-9 6Z" /></svg></span>
+                  <span class="track-play-label">播放此曲</span>
+                </button>
+                <span class="track-duration">0:23</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="track-card" data-track="1" style="--accent: #52766c; --wash: #dce7df">
+            <div class="track-art elven-art" aria-hidden="true">
+              <div class="moon"></div><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
+              <i class="star star-one"></i><i class="star star-two"></i><i class="star star-three"></i>
+              <span class="art-number">02</span><span class="art-caption">LETTERS FROM THE MOONWOOD</span>
+            </div>
+            <div class="track-body">
+              <div class="track-meta"><span>ELVEN</span><span>96 BPM · D DORIAN</span></div>
+              <h3>月林来信</h3>
+              <p>钟声、竖琴与长尾混响相互回应，像一封来自异世界的信。</p>
+              <div class="mini-wave" aria-hidden="true"></div>
+              <div class="track-footer">
+                <button class="track-play" type="button" aria-label="播放月林来信">
+                  <span class="track-play-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 9 6-9 6Z" /></svg></span>
+                  <span class="track-play-label">播放此曲</span>
+                </button>
+                <span class="track-duration">0:20</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="track-card" data-track="2" style="--accent: #5660a4; --wash: #dfe2f0">
+            <div class="track-art future-art" aria-hidden="true">
+              <div class="future-orb"></div><div class="future-grid"></div><div class="scanline"></div>
+              <span class="art-number">03</span><span class="art-caption">BEYOND THE NEON HORIZON</span>
+            </div>
+            <div class="track-body">
+              <div class="track-meta"><span>SCI-FI</span><span>118 BPM · E MINOR</span></div>
+              <h3>霓虹轨道</h3>
+              <p>跳动的贝斯、十六分音符琶音和机械鼓点，驶向夜色深处。</p>
+              <div class="mini-wave" aria-hidden="true"></div>
+              <div class="track-footer">
+                <button class="track-play" type="button" aria-label="播放霓虹轨道">
+                  <span class="track-play-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 9 6-9 6Z" /></svg></span>
+                  <span class="track-play-label">播放此曲</span>
+                </button>
+                <span class="track-duration">0:16</span>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <span>COMPOSED IN CODE · PLAYED BY YOUR BROWSER</span>
+      <span>空格键 播放 / 暂停</span>
+    </footer>
+  </body>
+</html>
