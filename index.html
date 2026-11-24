@@ -69,6 +69,48 @@
       padding-left: 0;
     }
   </style>
+  <script>
+    const ENTRIES = [
+      {
+        title: "三段风格 · Web Audio 实时合成",
+        model: "Qwen 4 Max (High)",
+        href: "./qwen4/index.html",
+      },
+      {
+        title: "声景三章 · Web Audio Tryptich",
+        model: "Kimi K3.1 Pro (High)",
+        href: "./kimi/index.html",
+      },
+      {
+        title: "三幕音景 · Three Soundscapes",
+        model: "DeepSeek V4.1 Flash 1017 (High)",
+        href: "./dpsk/index.html",
+      },
+      {
+        title: "三段声音风景",
+        model: "GPT-6.2 Sol (High) (Supposedly)",
+        href: "./62sol/index.html",
+      },
+      {
+        title: "Web Audio API 谱曲 · 三段",
+        model: "MiMo V2.6 Pro",
+        href: "./mimo-2.6-pro/index.html",
+      },
+    ];
+    document.addEventListener("DOMContentLoaded", () => {
+      const ul = document.getElementById("list");
+      for (const entry of ENTRIES) {
+        const li = document.createElement("li");
+        li.innerHTML = `
+          <div class="hover-reveal-container">
+            <a class="hover-revealer" href="${entry.href}">${entry.title}</a>
+            by <span class="hover-to-reveal">${entry.model}</span>
+          </div>
+        `;
+        ul.appendChild(li);
+      }
+    });
+  </script>
   <body>
     <div id="app">
       <h1>
@@ -87,40 +129,7 @@
       </blockquote>
 
       <p>有请各位选手入场：</p>
-      <ul style="margin-top: -0.5em">
-        <li>
-          <div class="hover-reveal-container">
-            <a class="hover-revealer" href="./qwen4/index.html"
-              >三段风格 · Web Audio 实时合成</a
-            >
-            by <span class="hover-to-reveal">Qwen 4 Max (High)</span>
-          </div>
-        </li>
-        <li>
-          <div class="hover-reveal-container">
-            <a class="hover-revealer" href="./kimi/index.html"
-              >声景三章 · Web Audio Tryptich</a
-            >
-            by <span class="hover-to-reveal">Kimi K3.1 Pro (High)</span>
-          </div>
-        </li>
-        <li>
-          <div class="hover-reveal-container">
-            <a class="hover-revealer" href="./dpsk/index.html"
-              >三幕音景 · Three Soundscapes</a
-            >
-            by
-            <span class="hover-to-reveal">DeepSeek V4.1 Flash 1017 (High)</span>
-          </div>
-        </li>
-        <li>
-          <div class="hover-reveal-container">
-            <a class="hover-revealer" href="./62sol/index.html">三段声音风景</a>
-            by
-            <span class="hover-to-reveal">GPT-6.2 Sol (High) (Supposedly)</span>
-          </div>
-        </li>
-      </ul>
+      <ul style="margin-top: -0.5em" id="list"></ul>
 
       <p>
         You may also like:
